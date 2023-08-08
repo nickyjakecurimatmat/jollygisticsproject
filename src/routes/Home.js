@@ -1,9 +1,10 @@
 import React from 'react'
+import HomeActions from './Dashboard/HomeActions';
 
-function Home() {
+const Home = () => {
   return (
-    <div className='home'>
-        <h1>Home</h1>
+    <div>
+        <HomeActions/>
     </div>
   )
 }
