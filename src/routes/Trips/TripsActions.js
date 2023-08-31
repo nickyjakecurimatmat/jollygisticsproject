@@ -148,19 +148,19 @@ const TripsActions = () => {
             valueOptions: ['J1', 'J2'], 
             editable: true,
         },
-        // {
-        //     field: 'date_time', 
-        //     headerName: 'Date/Time', 
-        //     width: 200,
-        //     valueGetter: (params) => {
-        //     return `${moment(new Date((params.row.date_time.seconds+params.row.date_time.nanoseconds/1000000000)*1000)).format('MMMM DD, yyyy - hh:mm A')}`;
-        //     },
-        // },
         {
             field: 'date_time', 
             headerName: 'Date/Time', 
             width: 200,
+            valueGetter: (params) => {
+            return `${moment(new Date((params.row.date_time.seconds+params.row.date_time.nanoseconds/1000000000)*1000)).format('MMMM DD, yyyy - hh:mm A')}`;
+            },
         },
+        // {
+        //     field: 'date_time', 
+        //     headerName: 'Date/Time', 
+        //     width: 200,
+        // },
         {field: 'pickup', headerName: 'Pickup', width: 120, editable: true,},
         {field: 'dropoff', headerName: 'Dropoff', width: 120, editable: true,},
         {
@@ -237,15 +237,16 @@ const TripsActions = () => {
     const handleEdit = async (id) => {
         const tripsDocs = doc(db, "trips", id);
         const docSnap = await getDoc(tripsDocs);
+        const data = docSnap.data();
+        data['date_time'] = moment(new Date((docSnap.data().date_time.seconds+docSnap.data().date_time.nanoseconds/1000000000)*1000)).format('MM/DD/YYYY hh:mm A');
+        console.log(data);
         setFormData(
-            docSnap.data()
+            data
         );
-        console.log(formData);
         setDocId(id);
         setModalTitle("Edit Trip");
         setEditFlag(true);
         setOpen(true);
-        console.log(formData);
     };
 
     const handleDelete = async (id) => {
@@ -290,8 +291,8 @@ const TripsActions = () => {
     const handleSubmit = async (event) => {
         event.preventDefault();
         console.log(formData);
-        console.log(event.target[0].value);
-        formData.date_time = event.target[0].value;
+        console.log(new Date(event.target[0].value));
+        formData.date_time = new Date(event.target[0].value);
 
         if(editFlag) {
             await updateDoc(doc(db, "trips", docId), formData);

@@ -3,6 +3,7 @@ import Card from '@mui/material/Card';
 import CardActions from '@mui/material/CardActions';
 import CardContent from '@mui/material/CardContent';
 import { Box, Typography } from '@mui/material';
+import moment from 'moment';
 
 import List from '@mui/material/List';
 import ListItem from '@mui/material/ListItem';
@@ -28,7 +29,7 @@ import { MobileDatePicker } from '@mui/x-date-pickers/MobileDatePicker';
 import { DesktopDatePicker } from '@mui/x-date-pickers/DesktopDatePicker';
 import { StaticDatePicker } from '@mui/x-date-pickers/StaticDatePicker';
 
-import { addDoc, collection, deleteDoc, doc, getDocs, getDoc, setDoc, Timestamp, updateDoc, query, where } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getDocs, getDoc, setDoc, Timestamp, updateDoc, query, where, orderBy } from 'firebase/firestore';
 import { db } from '../../firebase-config';
 
 const HomeActions = () => {
@@ -36,6 +37,7 @@ const HomeActions = () => {
   const [trips, setTrips] = useState([]);
   const vehicleCollectionRef = collection(db, "vehicles");
   const tripCollectionRef = collection(db, "trips");
+  const [filterDate, setFilterDate] = useState(new Date());
   
 
   const getVehicles = async () => {
@@ -44,9 +46,11 @@ const HomeActions = () => {
   }
   
   const getTrips = async () => {
-    const q = await query(tripCollectionRef, where("date_time", "==", "04/18/2022 05:50 PM"));
+    console.log(new Date(filterDate.setHours(0,0,0)) + ' '+ new Date(filterDate.setHours(23,59,59)));
+    const q = await query(tripCollectionRef, where("date_time", ">=", new Date(filterDate.setHours(0,0,0))), where("date_time", "<=", new Date(filterDate.setHours(23,59,59))), orderBy("date_time"));
 
     const data = await getDocs(q);
+    console.log(data);
     setTrips(data.docs.map((doc) => ({...doc.data(), id: doc.id})));
   }
 
@@ -57,9 +61,16 @@ const HomeActions = () => {
   useEffect(() => {
     getTrips();
   }, []);
+
+  useEffect(() => { // this hook will get called every time myArr has changed
+    // perform some action every time myArr is updated
+    console.log('feeeeee'+ filterDate);
+    getTrips();
+ }, [filterDate])
+ 
   
 //   const vehicles = [{
-//       value: 'J1',
+//       value: 'J1', 
 //       label: 'J1',
 //   },
 //   {
@@ -127,7 +138,9 @@ vehicles.map(vehicle => {
         <LocalizationProvider dateAdapter={AdapterDayjs}>
           <DemoContainer components={['DatePicker']}>
             <DemoItem label="Select Date">
-              <DatePicker defaultValue={dayjs('2022-04-17')} />
+              <DatePicker defaultValue={dayjs(filterDate)} onChange={(date) => {
+                setFilterDate(new Date(date));
+    }}/>
             </DemoItem>
           </DemoContainer>
         </LocalizationProvider>
@@ -157,7 +170,7 @@ vehicles.map(vehicle => {
                       <>
                        <Divider variant="inset" component="li" />
                       <ListItem>
-                        <ListItemText primary={trip.date_time} secondary={trip.operation_span+' hours'}/>
+                        <ListItemText primary={moment(new Date((trip.date_time.seconds+trip.date_time.nanoseconds/1000000000)*1000)).format('hh:mm A - MMMM DD, yyyy')} secondary={trip.operation_span+' hours'}/>
                         <ListItemAvatar>
                           <Avatar 
                           sx={{ 
